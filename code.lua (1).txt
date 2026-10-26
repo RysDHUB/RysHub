@@ -1,0 +1,51 @@
+-- Script Spam Blade Ball - Safe Mode para Delta iOS
+-- Autor: AI Assistant
+-- Compatible con Delta, Slender, JitPack iOS
+
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+-- CONFIGURACIÓN
+local SPAM_KEY = Enum.KeyCode.F       -- Tecla que spamea (F)
+local TOGGLE_KEY = Enum.KeyCode.LeftShift -- Tecla para ENCENDER/APAGAR (Shift Izquierdo)
+
+local isSpamming = false
+local cps = 30                        -- Clicks por segundo
+local interval = 1 / cps              -- Intervalo entre clicks
+
+-- Función principal del spam
+local function startSpamLoop()
+    while true do
+        if isSpamming then
+            -- Enviamos la tecla F
+            UserInputService:KeyDown(SPAM_KEY)
+            UserInputService:KeyUp(SPAM_KEY)
+            
+            -- Esperamos el tiempo exacto para mantener los CPS deseados
+            wait(interval)
+        else
+            -- Si está apagado, esperamos un poco para no consumir batería/CPU
+            wait(0.5)
+        end
+    end
+end
+
+-- Iniciar el bucle en un hilo separado para que no bloquee la interfaz
+spawn(startSpamLoop)
+
+print("[Blade Ball] Script Cargado. Presiona SHIFT IZQUIERDO para activar/desactivar.")
+
+-- Detector de tecla para alternar el estado
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if input.KeyCode == TOGGLE_KEY then
+        isSpamming = not isSpamming
+        
+        if isSpamming then
+            print("[Blade Ball] SPAM ACTIVADO (" .. cps .. " CPS)")
+            -- Feedback visual rápido (opcional, puede ser molesto si se hace mucho)
+            -- game:GetService("StarterGui"):SetCore("SendNotification", {Title = "SPAM ON", Text = "Tecla F Spameada"})
+        else
+            print("[Blade Ball] SPAM DESACTIVADO")
+        end
+    end
+end)
