@@ -1,0 +1,102 @@
+-- Script: Spam de Toque Físico (Blade Ball - Delta iOS)
+-- Método: Simula un toque físico en coordenadas fijas (más robusto que InputBegan)
+
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local StarterGui = game:GetService("StarterGui")
+local RunService = game:GetService("RunService")
+
+-- CONFIGURACIÓN
+-- Ajusta estas coordenadas si tu resolución es diferente. 
+-- Estas son aproximadas para la posición estándar del botón 'F' en móviles.
+local X_COORD = 0.5   -- Centro horizontal (0.0 a 1.0)
+local Y_COORD = 0.8   -- Cerca de la parte inferior (donde suelen estar los controles)
+
+local SPAM_SPEED = 0.05 -- Velocidad entre toques (segundos)
+local TAP_DURATION = 0.05 -- Duración del "toque" simulado
+
+-- Estado
+local isSpamming = false
+local spamThread = nil
+
+-- UI Visual
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "NativeTouchSpam"
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.ResetOnSpawn = false
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 100, 0, 60)
+frame.Position = UDim2.new(1, -110, 0, 10)
+frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.BorderSizePixel = 2
+frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+frame.Parent = screenGui
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(1, -10, 1, -10)
+button.Position = UDim2.new(0, 5, 0, 5)
+button.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+button.Text = "TOUCH OFF"
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Font = Enum.Font.GothamBold
+button.TextSize = 18
+button.Parent = frame
+
+local function toggleSpam()
+    isSpamming = not isSpamming
+    
+    if isSpamming then
+        button.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+        button.Text = "TOUCH ON"
+        StarterGui:SetCore("SendNotification", {Title = "Blade Ball", Text = "NATIVE TOUCH ON", Duration = 2})
+        startTouchLoop()
+    else
+        button.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        button.Text = "TOUCH OFF"
+        StarterGui:SetCore("SendNotification", {Title = "Blade Ball", Text = "TOUCH OFF", Duration = 2})
+        stopTouchLoop()
+    end
+end
+
+button.MouseButton1Down:Connect(toggleSpam)
+
+-- Lógica de Spam de Toque Físico
+function startTouchLoop()
+    if spamThread and task and task.cancel then
+        task.cancel(spamThread)
+    end
+    
+    spamThread = task.spawn(function()
+        while isSpamming do
+            -- Crear objeto de entrada de tipo Mouse/Touch
+            local inputObj = Instance.new("InputObject")
+            inputObj.InputType = Enum.UserInputType.Touch
+            inputObj.TouchLocation = Vector2.new(X_COORD, Y_COORD)
+            
+            -- Disparar Touch Started
+            UserInputService.InputBegan:Fire(inputObj, true)
+            
+            wait(TAP_DURATION)
+            
+            -- Disparar Touch Ended
+            local inputEndObj = Instance.new("InputObject")
+            inputEndObj.InputType = Enum.UserInputType.Touch
+            inputEndObj.TouchLocation = Vector2.new(X_COORD, Y_COORD)
+            UserInputService.InputEnded:Fire(inputEndObj, true)
+            
+            wait(SPAM_SPEED)
+        end
+    end)
+end
+
+function stopTouchLoop()
+    if spamThread and task and task.cancel then
+        task.cancel(spamThread)
+        spamThread = nil
+    end
+end
+
+print("[Blade Ball] Script cargado. Usa el botón en pantalla.")
