@@ -1,0 +1,82 @@
+-- Script Spam Blade Ball - Versión Estable para Delta iOS
+-- Usa FireClick y métodos directos de input
+
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local StarterGui = game:GetService("StarterGui")
+
+-- CONFIGURACIÓN
+local SPAM_KEY = Enum.KeyCode.F       -- Tecla a spamear
+local CPS = 30                        -- Clicks por segundo
+local INTERVAL = 1 / CPS              -- Intervalo entre clicks
+
+-- Estado inicial
+local isSpamming = false 
+
+-- Crear UI simple y segura
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "BladeSpamUI"
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.ResetOnSpawn = false
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local button = Instance.new("TextButton")
+button.Name = "ToggleBtn"
+button.Size = UDim2.new(0, 70, 0, 50)
+button.Position = UDim2.new(1, -80, 0, 10)
+button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+button.Text = "OFF"
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Font = Enum.Font.SourceSansBold
+button.TextSize = 20
+button.BorderSizePixel = 2
+button.BorderColor3 = Color3.fromRGB(0, 0, 0)
+button.Parent = screenGui
+
+-- Función de actualización visual
+local function updateState()
+    if isSpamming then
+        button.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+        button.Text = "ON"
+    else
+        button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        button.Text = "OFF"
+    end
+end
+
+updateState()
+
+-- Evento de activación del botón (más seguro que Activated en algunos executors)
+button.MouseButton1Down:Connect(function()
+    isSpamming = not isSpamming
+    updateState()
+    
+    -- Notificación visual rápida
+    StarterGui:SetCore("SendNotification", {
+        Title = "Blade Ball",
+        Text = isSpamming and "SPAM ON" or "SPAM OFF",
+        Duration = 1
+    })
+end)
+
+-- Bucle de spam robusto
+while true do
+    if isSpamming then
+        -- Método 1: Simular tecla directamente
+        UserInputService:KeyDown(SPAM_KEY)
+        UserInputService:KeyUp(SPAM_KEY)
+        
+        -- Método 2: Forzar evento de input (a veces necesario en iOS)
+        local inputObject = Instance.new("InputObject")
+        inputObject.KeyCode = SPAM_KEY
+        inputObject.UserInputType = Enum.UserInputType.Keyboard
+        
+        -- Disparar el evento como si el usuario lo hubiera hecho
+        UserInputService.InputBegan:Fire(inputObject)
+        
+        wait(INTERVAL)
+    else
+        wait(0.5) -- Pausa ligera cuando está apagado
+    end
+end
