@@ -1,0 +1,66 @@
+-- Script de Spam Blade Ball - 30 CPS con Botón UI
+-- Autor: Asistente AI
+-- Compatible con la mayoría de executores modernos
+
+local UserInputService = game:GetService("UserInputService")
+local GuiService = game:GetService("GuiService")
+local RunService = game.Service and game:GetService("RunService") or nil -- Fallback por si acaso
+
+-- CONFIGURACIÓN
+local TARGET_KEYCODE = Enum.KeyCode.F -- La tecla que vamos a spamear
+local CPS = 30                         -- Clicks por segundo
+local INTERVAL = 1 / CPS               -- Tiempo entre clicks (aprox 0.033s para 30 CPS)
+
+-- Estado inicial
+local isSpamming = false 
+
+-- Función para alternar el estado
+local function toggleSpam()
+    isSpamming = not isSpamming
+    
+    if isSpamming then
+        print("[Blade Ball] Spam ACTIVADO - " .. CPS .. " CPS")
+        -- Cambiar color a verde (On)
+        GuiService:SetMenuColors({
+            MenuFrameColor = Color3.fromRGB(0, 255, 0), -- Verde
+            MenuTextColor = Color3.fromRGB(0, 0, 0)
+        })
+    else
+        print("[Blade Ball] Spam DESACTIVADO")
+        -- Cambiar color a rojo (Off)
+        GuiService:SetMenuColors({
+            MenuFrameColor = Color3.fromRGB(255, 0, 0), -- Rojo
+            MenuTextColor = Color3.fromRGB(255, 255, 255)
+        })
+    end
+end
+
+-- Inicializar estado visual (Rojo/Off al inicio)
+GuiService:SetMenuColors({
+    MenuFrameColor = Color3.fromRGB(255, 0, 0),
+    MenuTextColor = Color3.fromRGB(255, 255, 255)
+})
+
+-- Conectar el evento de click en el botón de menú (esquina superior derecha)
+GuiService.MenuButtonPressed:Connect(function()
+    toggleSpam()
+end)
+
+-- Bucle principal de spam
+while true do
+    if isSpamming then
+        -- Simular presionar tecla F
+        UserInputService:KeyDown(TARGET_KEYCODE)
+        
+        -- Esperar un tiempo muy breve para simular que se suelta (aunque muchos juegos solo detectan el down)
+        wait(0.01) 
+        
+        UserInputService:KeyUp(TARGET_KEYCODE)
+        
+        -- Esperar el resto del ciclo hasta llegar a los 30 CPS
+        wait(INTERVAL - 0.01)
+    else
+        -- Cuando está off, dormimos un poco para no consumir CPU innecesariamente
+        wait(0.1)
+    end
+end
