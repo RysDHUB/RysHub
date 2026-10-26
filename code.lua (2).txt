@@ -1,0 +1,113 @@
+-- Script: Spam Nativo Blade Ball (Tecla F)
+-- Compatible con Delta iOS y la mayoría de executors Lua 5.1/5.2
+-- Autor: AI Assistant
+
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local StarterGui = game:GetService("StarterGui")
+local RunService = game:GetService("RunService")
+
+-- Configuraciones
+local SPAM_KEY = Enum.KeyCode.F       -- Tecla objetivo: F
+local SPAM_SPEED = 0.08               -- Velocidad en segundos (menor = más rápido). 
+                                      -- 0.08 es ~12 CPS. Si te banean o no funciona, sube a 0.12.
+
+-- Estado
+local isSpamming = false
+local spamThread = nil
+
+-- Crear UI visual para controlar
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "NativeBladeSpam"
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.ResetOnSpawn = false
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Name = "ToggleFrame"
+frame.Size = UDim2.new(0, 100, 0, 60)
+frame.Position = UDim2.new(1, -110, 0, 10)
+frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.BorderSizePixel = 2
+frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+frame.Parent = screenGui
+
+local button = Instance.new("TextButton")
+button.Name = "ToggleBtn"
+button.Size = UDim2.new(1, -10, 1, -10)
+button.Position = UDim2.new(0, 5, 0, 5)
+button.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- Rojo por defecto
+button.Text = "SPAM OFF"
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Font = Enum.Font.GothamBold
+button.TextSize = 18
+button.Parent = frame
+
+-- Función de toggle
+local function toggleSpam()
+    isSpamming = not isSpamming
+    
+    if isSpamming then
+        button.BackgroundColor3 = Color3.fromRGB(50, 200, 50) -- Verde
+        button.Text = "SPAM ON"
+        StarterGui:SetCore("SendNotification", {
+            Title = "Blade Ball Bot",
+            Text = "NATIVE SPAM ACTIVADO",
+            Duration = 2
+        })
+        startSpamLoop()
+    else
+        button.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- Rojo
+        button.Text = "SPAM OFF"
+        StarterGui:SetCore("SendNotification", {
+            Title = "Blade Ball Bot",
+            Text = "SPAM DESACTIVADO",
+            Duration = 2
+        })
+        stopSpamLoop()
+    end
+end
+
+button.MouseButton1Down:Connect(toggleSpam)
+
+-- Lógica del bucle de spam "Nativo"
+function startSpamLoop()
+    if spamThread and task and task.cancel then
+        task.cancel(spamThread)
+    end
+    
+    spamThread = task.spawn(function()
+        while isSpamming do
+            -- Crear un objeto InputObject falso pero válido
+            local inputObj = Instance.new("InputObject")
+            inputObj.InputType = Enum.UserInputType.Keyboard
+            inputObj.KeyCode = SPAM_KEY
+            
+            -- INYECCIÓN NATIVA: Disparar el evento como si viniera del sistema operativo
+            -- Esto es lo que hace que se sienta "real" para el juego
+            UserInputService.InputBegan:Fire(inputObj, true)
+            
+            -- Pequeña pausa para simular la liberación de la tecla (opcional pero recomendado)
+            wait(SPAM_SPEED / 2)
+            
+            -- Opcional: Disparar InputEnded también para mayor realismo
+            local inputEndObj = Instance.new("InputObject")
+            inputEndObj.InputType = Enum.UserInputType.Keyboard
+            inputEndObj.KeyCode = SPAM_KEY
+            UserInputService.InputEnded:Fire(inputEndObj, true)
+            
+            wait(SPAM_SPEED / 2)
+        end
+    end)
+end
+
+function stopSpamLoop()
+    if spamThread and task and task.cancel then
+        task.cancel(spamThread)
+        spamThread = nil
+    end
+end
+
+-- Iniciar en modo manual (el usuario debe tocar el botón)
+print("[Blade Ball] Script cargado. Toca el botón rojo en pantalla para activar.")
